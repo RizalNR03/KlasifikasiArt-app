@@ -1,0 +1,3 @@
+0 Cubist
+1 Realist
+2 Surrealist

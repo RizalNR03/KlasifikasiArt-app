@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Classification</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            max-width: 600px;
+            margin-top: 50px;
+            padding: 20px;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        h2 {
+            color: #333;
+        }
+        #result img {
+            border: 2px solid #007bff;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container text-center">
+        <h2 class="mb-4">Upload an Image for Classification</h2>
+        <form id="uploadForm" enctype="multipart/form-data">
+            <div class="form-group">
+                <input type="file" class="form-control-file" id="imageInput" name="image" accept="image/png, image/jpeg, image/jpg" required>
+            </div>
+            <button type="submit" class="btn btn-primary btn-lg">Predict Image Type</button>
+        </form>
+        
+        <div id="result" class="mt-4 text-left"></div>
+    </div>
+
+    <!-- Bootstrap and JavaScript -->
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script>
+        document.getElementById("uploadForm").onsubmit = async function(event) {
+            event.preventDefault();
+            const formData = new FormData();
+            const fileInput = document.getElementById("imageInput");
+            formData.append("image", fileInput.files[0]);
+
+            // Show loading spinner
+            document.getElementById("result").innerHTML = `<div class="spinner-border text-primary" role="status"><span class="sr-only">Loading...</span></div>`;
+            
+            try {
+                const response = await fetch("/prediction", {
+                    method: "POST",
+                    body: formData
+                });
+                
+                const result = await response.json();
+                const resultDiv = document.getElementById("result");
+
+                if (response.ok) {
+                    resultDiv.innerHTML = `
+                        <div class="alert alert-success" role="alert">
+                            <h4 class="alert-heading">Prediction Result</h4>
+                            <p><strong>Prediction:</strong> ${result.data.image_types_prediction}</p>
+                            <p><strong>Confidence:</strong> ${(result.data.confidence * 100).toFixed(2)}%</p>
+                        </div>
+                        <img src="${URL.createObjectURL(fileInput.files[0])}" alt="Uploaded Image" style="width:100%; max-width:300px;">
+                    `;
+                } else {
+                    resultDiv.innerHTML = `<div class="alert alert-danger" role="alert">Error: ${result.status.message}</div>`;
+                }
+            } catch (error) {
+                document.getElementById("result").innerHTML = `<div class="alert alert-danger" role="alert">An error occurred. Please try again later.</div>`;
+            }
+        };
+    </script>
+</body>
+</html>
